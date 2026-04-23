@@ -2,17 +2,18 @@ import { useState } from 'react'
 
 export default function App() {
   const [todos, setTodos] = useState([
-    { id: 1, text: 'Read a book', done: false },
-    { id: 2, text: 'Go for a walk', done: true },
-    { id: 3, text: 'Write some code', done: false },
+    { id: 1, text: 'Read a book', priority: "low", done: false },
+    { id: 2, text: 'Go for a walk', priority: "normal", done: true },
+    { id: 3, text: 'Write some code', priority: "high", done: false },
   ])
   const [input, setInput] = useState('')
   const [filter, setFilter] = useState('all')
+  const [priority, setPriority] = useState("normal");
 
   const addTodo = () => {
     const text = input.trim()
     if (!text) return
-    setTodos([...todos, { id: Date.now(), text, done: false }])
+    setTodos([...todos, { id: Date.now(), text, priority: priority, done: false }])
     setInput('')
   }
 
@@ -20,6 +21,9 @@ export default function App() {
     setTodos(todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)))
 
   const deleteTodo = (id) => setTodos(todos.filter((t) => t.id !== id))
+
+  const updatePriority = (id, newPriority) =>
+    setTodos(todos.map(t => t.id === id ? { ...t, priority: newPriority } : t))
 
   const visible = todos.filter((t) =>
     filter === 'active' ? !t.done : filter === 'completed' ? t.done : true,
@@ -34,9 +38,24 @@ export default function App() {
         : 'text-slate-600 hover:bg-slate-200'
     }`
 
+  const PriorityPicker = ({ value, onChange }) => (
+    <div className="flex border border-gray-200 rounded-md text-xs">
+      {["low","normal","high"].map(p => (
+        <button key={p}
+          onClick={() => onChange(p)}
+          className={`px-3 py-1 capitalize transition-colors
+            ${p === "low"   && value === p ? "bg-green-100 text-green-800 font-medium" : ""}
+            ${p === "normal"&& value === p ? "bg-gray-100 text-gray-800 font-medium" : ""}
+            ${p === "high"  && value === p ? "bg-red-100 text-red-800 font-medium" : ""}
+            ${value !== p ? "text-gray-400" : ""}
+          `}>{p}</button>
+      ))}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-slate-100 flex items-start justify-center py-16 px-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-md p-6">
+      <div className="w-full max-w-xl bg-white rounded-xl shadow-md p-6">
         <h1 className="text-2xl font-bold text-slate-800 mb-4">Todo List</h1>
 
         <div className="flex gap-2 mb-4">
@@ -48,6 +67,7 @@ export default function App() {
             placeholder="What needs doing?"
             className="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
+          <PriorityPicker value={priority} onChange={setPriority} />
           <button
             onClick={addTodo}
             className="px-4 py-2 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 transition"
@@ -82,6 +102,10 @@ export default function App() {
               >
                 {todo.text}
               </button>
+              <PriorityPicker
+                 value={todo.priority}
+                onChange={(p) => updatePriority(todo.id, p)}
+              />
               <button
                 onClick={() => deleteTodo(todo.id)}
                 className="text-slate-400 hover:text-red-500 text-lg font-bold px-2"
